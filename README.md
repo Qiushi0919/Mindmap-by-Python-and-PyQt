@@ -1,5 +1,11 @@
 # MindMap - 思维导图编辑器
 
+<div align="center">
+
+![Python](https://img.shields.io/badge/Python-3.6+-blue.svg)
+![PyQt5](https://img.shields.io/badge/PyQt5-5.15+-green.svg)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+
 一个功能丰富、界面美观的思维导图编辑软件，支持树形思维导图的创建、编辑和管理。
 
 作者：谢秋实 朱拓源 熊锦宸
