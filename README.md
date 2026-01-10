@@ -14,7 +14,7 @@ MindMap 是一个基于 Python 和 PyQt5 开发的思维导图编辑软件。它
 
 <img width="2504" height="1560" alt="image" src="https://github.com/user-attachments/assets/8df409c3-5f18-49f6-8c71-b0e086bc43d7" />
 
-<img width="1534" height="1066" alt="image" src="https://github.com/user-attachments/assets/d1558fd0-4938-4aad-8a8d-97fa790ed49b" />
+<img width="1796" height="1146" alt="image" src="https://github.com/user-attachments/assets/1fa99319-ec56-4181-8ba3-d3fc59b35d62" />
 
 <img width="1784" height="744" alt="image" src="https://github.com/user-attachments/assets/05a05d69-518d-4b6a-81b6-4f4f6d8e69a4" />
 
