@@ -175,7 +175,7 @@ python main.py
 
 ### 下载 EXE / DMG
 
-已配置 GitHub Actions 跨平台构建。推送 `v*` 版本标签后，GitHub Releases 会自动附带 Windows x64 EXE、macOS Apple Silicon DMG 和 macOS Intel DMG。
+已配置 GitHub Actions 跨平台构建。推送 `v*` 版本标签后，GitHub Releases 会自动附带 Windows x64 EXE 和 macOS Apple Silicon DMG。
 
 ---
 
