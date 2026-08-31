@@ -10,6 +10,12 @@
 
 作者：谢秋实 朱拓源
 
+## ⬇️ 下载桌面版
+
+**[Windows x64 EXE](https://github.com/Qiushi0919/Mindmap-by-Python-and-PyQt/releases/latest/download/MindMap-Windows-x86_64.exe)** · **[macOS Apple Silicon DMG](https://github.com/Qiushi0919/Mindmap-by-Python-and-PyQt/releases/latest/download/MindMap-macOS-arm64.dmg)** · [查看版本说明](https://github.com/Qiushi0919/Mindmap-by-Python-and-PyQt/releases/latest)
+
+GitHub 代码页只展示源码；EXE 和 DMG 作为发布附件保存在 Releases，不会塞进 Git 历史。
+
 更多系统框图、关键模块流程图、设计报告、软件运行界面在**报告**中有详细展示
 
 ---

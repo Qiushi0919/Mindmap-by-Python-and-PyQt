@@ -1811,13 +1811,23 @@ class MainWindow(QMainWindow):
 
     def about(self):
         msgBox = QMessageBox(self)
-        msgBox.setWindowTitle('About 429 MindMap')
-        msgBox.setText('MindMap written in PyQt5')
+        msgBox.setWindowTitle('About MindMap')
+        msgBox.setText('<b>MindMap</b><br>Modern concept-map editor written in PyQt5')
         msgBox.setTextFormat(Qt.RichText)
-        msgBox.setInformativeText('Report Bug to: \n 1140873504@qq.com')
+        msgBox.setInformativeText(
+            'Download EXE / DMG from GitHub Releases:\n'
+            'https://github.com/Qiushi0919/Mindmap-by-Python-and-PyQt/releases/latest\n\n'
+            'Report bugs: 1061839153@qq.com'
+        )
         pic = QPixmap(self.root + '/images/window.jpg')
         msgBox.setIconPixmap(pic.scaled(50, 50))
+        download_button = msgBox.addButton('下载最新版', QMessageBox.ActionRole)
+        msgBox.addButton(QMessageBox.Ok)
         msgBox.exec()
+        if msgBox.clickedButton() == download_button:
+            QDesktopServices.openUrl(QUrl(
+                'https://github.com/Qiushi0919/Mindmap-by-Python-and-PyQt/releases/latest'
+            ))
 
     def hot_key(self):
         if not self.dock.isVisible():
