@@ -51,17 +51,24 @@ def main():
     # ========================================================================
     # QApplication管理整个应用程序的控制流和主设置
     # sys.argv是命令行参数列表，传递给Qt用于处理系统级参数
+    if hasattr(Qt, 'AA_EnableHighDpiScaling'):
+        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+    if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
+        QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     app = QApplication(sys.argv)
     # 设置应用程序名称，用于在系统中标识该应用
-    app.setApplicationName('MyXind')
+    app.setApplicationName('MindMap')
+    app.setOrganizationName('Qiushi0919')
 
     # ========================================================================
     # 初始化配置管理器
     # ========================================================================
-    # QSettings用于保存和读取应用程序的配置信息（如最近打开的文件路径）
-    # SETTINGS_PATH定义配置文件的路径（从Config模块导入）
-    # QSettings.IniFormat表示使用INI格式存储配置
-    settings = QSettings(SETTINGS_PATH, QSettings.IniFormat)
+    # Store mutable preferences in the user's application config directory.
+    # This keeps packaged apps read-only and prevents recent paths from being
+    # written into the source checkout.
+    settings_dir = QStandardPaths.writableLocation(QStandardPaths.AppConfigLocation)
+    QDir().mkpath(settings_dir)
+    settings = QSettings(os.path.join(settings_dir, 'settings.ini'), QSettings.IniFormat)
     # 检查是否已有最近打开路径的配置项
     if not settings.value('lastpath'):
         # 若还没有保存过 lastpath，则初始化为空列表

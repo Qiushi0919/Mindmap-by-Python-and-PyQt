@@ -36,6 +36,8 @@ from Component import *  # 导入组件模块（Note, Link, TodoList等）
 from Config import *     # 导入配置常量
 from Node import Node    # 导入节点类
 from Annotation import HandwritingDialog, AnnotationItem  # 导入手写相关类
+from AIDialog import AIGenerationDialog, AIGenerationThread
+from AIProvider import DEFAULT_MODEL
 
 
 class CustomGraphicsView(QGraphicsView):
@@ -83,6 +85,18 @@ class CustomGraphicsView(QGraphicsView):
         """设置手写模式状态"""
         self._handwritingMode = enabled
         self._handwritingModeType = mode_type
+
+    def wheelEvent(self, event):
+        """Use Ctrl/Command + wheel for smooth canvas zoom."""
+        if event.modifiers() & Qt.ControlModifier:
+            factor = 1.12 if event.angleDelta().y() > 0 else 1 / 1.12
+            current_scale = self.transform().m11()
+            target_scale = current_scale * factor
+            if 0.2 <= target_scale <= 4.0:
+                self.scale(factor, factor)
+            event.accept()
+            return
+        super().wheelEvent(event)
     
     def mousePressEvent(self, event):
         """鼠标按下事件：记录起始位置"""
@@ -204,8 +218,11 @@ class MainWindow(QMainWindow):
         self.m_dockShow = True
         self.m_settings = settings
         self.m_language = 'zh_CN'  # 当前语言：'zh_CN'（中文）或'en_US'（英文）
-        self.m_theme = 'Black & White'  # 当前主题：'Light'（浅色）、'Dark'（深色）、'Black & White'（黑白）
+        self.m_theme = 'Light'  # 默认使用现代浅色概念图主题
         self.m_moveWithSubtree = True  # 移动节点时是否同时移动子树，默认为True
+        self._orcarouter_api_key = os.environ.get('ORCAROUTER_API_KEY', '')
+        self.ai_thread = None
+        self.ai_progress = None
         
         # ====================================================================
         # 翻译字典
@@ -221,6 +238,9 @@ class MainWindow(QMainWindow):
                 'Dark': '深色',
                 'Language': '语言',
                 'Help': '帮助',
+                'AI': 'AI',
+                'Generate Concept Map': 'AI 生成概念图',
+                'OrcaRouter Documentation': 'OrcaRouter 文档',
                 'New file': '新建文件',
                 'New File': '新建文件',
                 'Open file': '打开文件',
@@ -318,6 +338,9 @@ class MainWindow(QMainWindow):
                 'Dark': 'Dark',
                 'Language': 'Language',
                 'Help': 'Help',
+                'AI': 'AI',
+                'Generate Concept Map': 'Generate Concept Map',
+                'OrcaRouter Documentation': 'OrcaRouter Documentation',
                 'New file': 'New file',
                 'New File': 'New File',
                 'Open file': 'Open file',
@@ -423,6 +446,8 @@ class MainWindow(QMainWindow):
         self.view.setTheme(self.m_theme)
         self.view.setDragMode(QGraphicsView.RubberBandDrag)
         self.view.setRenderHints(QPainter.Antialiasing | QPainter.TextAntialiasing)
+        self.view.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        self.view.setResizeAnchor(QGraphicsView.AnchorViewCenter)
         # 启用视口更新优化，减少残留
         self.view.setViewportUpdateMode(QGraphicsView.FullViewportUpdate)
         # 或者使用智能更新模式（推荐）
@@ -449,7 +474,7 @@ class MainWindow(QMainWindow):
 
         self.update_title()
 
-        self.resize(2500, 1500)  # 设置窗口初始大小：宽度2500像素，高度1500像素
+        self.resize(1440, 920)
         self.center()
 
         self.show()
@@ -687,6 +712,48 @@ class MainWindow(QMainWindow):
         }
         """
         self.setStyleSheet(cute_style)
+
+    def applyModernLightStyle(self):
+        """Apply the default modern concept-map workspace style."""
+        self.setStyleSheet("""
+        QMainWindow { background: #F4F7FB; color: #183153; }
+        QMenuBar {
+            background: #FFFFFF; color: #334155;
+            border-bottom: 1px solid #E2E8F0;
+            padding: 5px 10px; font-size: 10.5pt;
+        }
+        QMenuBar::item { background: transparent; border-radius: 7px; padding: 6px 11px; }
+        QMenuBar::item:selected { background: #EAF3FF; color: #1769E0; }
+        QMenu {
+            background: #FFFFFF; color: #334155;
+            border: 1px solid #DCE5F0; border-radius: 10px; padding: 6px;
+        }
+        QMenu::item { padding: 8px 28px; border-radius: 7px; }
+        QMenu::item:selected { background: #EAF3FF; color: #1769E0; }
+        QMenu::separator { height: 1px; background: #E8EEF6; margin: 5px 8px; }
+        QToolBar {
+            background: #FFFFFF; border: none;
+            border-bottom: 1px solid #E2E8F0; spacing: 5px; padding: 7px 10px;
+        }
+        QToolButton {
+            background: transparent; color: #475569;
+            border: 1px solid transparent; border-radius: 10px;
+            padding: 5px 9px; min-width: 70px; min-height: 52px;
+            max-width: 112px; font-size: 9pt;
+        }
+        QToolButton:hover { background: #F0F6FF; border-color: #CFE2FF; color: #1769E0; }
+        QToolButton:pressed, QToolButton:checked {
+            background: #E3F0FF; border-color: #A7CBFF; color: #0F5FD6;
+        }
+        QStatusBar {
+            background: #FFFFFF; color: #64748B;
+            border-top: 1px solid #E2E8F0; padding: 3px;
+        }
+        QStatusBar QLabel { color: #64748B; font-weight: normal; padding: 2px 8px; }
+        QDockWidget { color: #334155; background: #FFFFFF; }
+        QDockWidget::title { background: #F3F7FC; padding: 7px; }
+        QListWidget { background: #FFFFFF; color: #334155; border: 1px solid #DCE5F0; }
+        """)
     
     def center(self):
         qr = self.frameGeometry()
@@ -727,13 +794,16 @@ class MainWindow(QMainWindow):
             self.menu_items['Theme'].setTitle(self.tr('Theme'))
         if 'Language' in self.menu_items:
             self.menu_items['Language'].setTitle(self.tr('Language'))
+        if 'AI' in self.menu_items:
+            self.menu_items['AI'].setTitle(self.tr('AI'))
         
         # 更新菜单项文本
         menu_texts = ['New file', 'New File', 'Open file', 'Open File', 'Last open file', 
                       'Save', 'Save File', 'Save as', 'Import from Markdown', 'Export as', 'Print...', 'Quit', 
                       'Undo', 'Redo', 'Cut', 'Copy', 'Paste', 'Delete', 'line manage', 
                       'note', 'link', 'icon', 'About', 'hot key help', 'handwriting', 
-                      'subtopic', 'relation', 'todolist', 'Move with subtree', 'Black & White', 'Light', 'Dark']
+                      'subtopic', 'relation', 'todolist', 'Move with subtree', 'Black & White', 'Light', 'Dark',
+                      'Generate Concept Map', 'OrcaRouter Documentation']
         
         for text in menu_texts:
             if text in self.menu_items:
@@ -947,6 +1017,29 @@ class MainWindow(QMainWindow):
         self.menu_items['icon'] = add_icon_action
 
         ##########################################################################
+        # AI menu (optional OrcaRouter provider)
+        ##########################################################################
+        ai_menu = self.menuBar().addMenu(self.tr('AI'))
+        self.menu_items['AI'] = ai_menu
+
+        self.ai_generate_action = QAction(
+            QIcon(self.root + '/icons/ai-spark.svg'),
+            self.tr('Generate Concept Map'),
+            self,
+        )
+        self.ai_generate_action.setShortcut('Ctrl+Shift+G')
+        self.ai_generate_action.triggered.connect(self.openAIGenerator)
+        ai_menu.addAction(self.ai_generate_action)
+        self.menu_items['Generate Concept Map'] = self.ai_generate_action
+
+        ai_docs_action = QAction(self.tr('OrcaRouter Documentation'), self)
+        ai_docs_action.triggered.connect(
+            lambda: QDesktopServices.openUrl(QUrl('https://docs.orcarouter.ai'))
+        )
+        ai_menu.addAction(ai_docs_action)
+        self.menu_items['OrcaRouter Documentation'] = ai_docs_action
+
+        ##########################################################################
         # Theme menu
         ##########################################################################
         theme_menu = self.menuBar().addMenu(self.tr('Theme'))
@@ -1033,8 +1126,9 @@ class MainWindow(QMainWindow):
         self.toolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         
         # 统一图标尺寸
-        icon_size = 48  # 设置统一的图标尺寸（像素），增大尺寸以确保文字完整显示
+        icon_size = 28
         self.toolbar.setIconSize(QSize(icon_size, icon_size))
+        self.toolbar.setMovable(False)
         
         # 设置工具栏按钮的统一大小，确保对齐
         self.toolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
@@ -1078,6 +1172,10 @@ class MainWindow(QMainWindow):
         self.handwriting_action.triggered.connect(self.toggleHandwriting)
         self.toolbar.addAction(self.handwriting_action)
         self.menu_items['handwriting'] = self.handwriting_action
+
+        # AI concept map generation
+        self.ai_generate_action.setIcon(getScaledIcon(self.root + '/icons/ai-spark.svg'))
+        self.toolbar.addAction(self.ai_generate_action)
 
         ############################################################################
         #  New Son Node (子主题)
@@ -1217,7 +1315,7 @@ class MainWindow(QMainWindow):
 
         self.label1 = QLabel('100%')
         self.label2 = QLabel(self.tr('Topic: ') + '1')
-        self.label3 = QLabel('思维导图 通信2302班 谢秋实 朱拓源 熊锦宸')
+        self.label3 = QLabel('Ready · Ctrl+Shift+G to generate with AI')
 
         widget = QWidget(self)
         hbox = QHBoxLayout()
@@ -1330,6 +1428,75 @@ class MainWindow(QMainWindow):
         self.update_title()
         self.messageShow(self.tr('Info: Markdown file imported successfully!'))
 
+    def openAIGenerator(self):
+        """Open the optional OrcaRouter concept-map generator."""
+        if self.ai_thread and self.ai_thread.isRunning():
+            return
+
+        saved_model = self.m_settings.value('ai/orcarouter/model', DEFAULT_MODEL)
+        dialog = AIGenerationDialog(
+            api_key=self._orcarouter_api_key,
+            model=str(saved_model or DEFAULT_MODEL),
+            parent=self,
+        )
+        if dialog.exec() != QDialog.Accepted:
+            return
+
+        values = dialog.values()
+        # Keep the secret in memory for this process only. QSettings stores only
+        # the non-sensitive model choice.
+        self._orcarouter_api_key = values['api_key']
+        self.m_settings.setValue('ai/orcarouter/model', values['model'])
+
+        self.ai_progress = QProgressDialog(
+            'OrcaRouter is building your concept map…', '', 0, 0, self
+        )
+        self.ai_progress.setWindowTitle('AI Concept Map')
+        self.ai_progress.setCancelButton(None)
+        self.ai_progress.setWindowModality(Qt.WindowModal)
+        self.ai_progress.setMinimumDuration(0)
+        self.ai_progress.show()
+
+        self.ai_generate_action.setEnabled(False)
+        self.ai_thread = AIGenerationThread(values, self)
+        self.ai_thread.generated.connect(self._onAIGenerationFinished)
+        self.ai_thread.failed.connect(self._onAIGenerationFailed)
+        self.ai_thread.finished.connect(self._cleanupAIGeneration)
+        self.ai_thread.start()
+
+    def _onAIGenerationFinished(self, markdown):
+        if self.ai_progress:
+            self.ai_progress.close()
+        if not self.close_file():
+            return
+        if not self.scene.readContentFromMarkdownText(markdown):
+            QMessageBox.warning(self, 'AI Concept Map', 'The generated outline could not be imported.')
+            return
+
+        self.m_filename = None
+        # The scene marks itself changed during import. Re-apply that state
+        # after resetting the title so the unsaved marker remains correct.
+        self.m_contentChanged = False
+        self.timer.stop()
+        self.update_title()
+        self.contentChanged(True)
+        bounds = self.scene.itemsBoundingRect().adjusted(-100, -100, 100, 100)
+        if bounds.isValid():
+            self.view.fitInView(bounds, Qt.KeepAspectRatio)
+        self.messageShow('AI concept map generated with OrcaRouter')
+
+    def _onAIGenerationFailed(self, message):
+        if self.ai_progress:
+            self.ai_progress.close()
+        QMessageBox.critical(self, 'OrcaRouter request failed', message)
+
+    def _cleanupAIGeneration(self):
+        if self.ai_thread:
+            self.ai_thread.deleteLater()
+        self.ai_thread = None
+        self.ai_progress = None
+        self.ai_generate_action.setEnabled(True)
+
     def file_last_open(self):
         lastpath = self.m_settings.value('lastpath')
 
@@ -1382,6 +1549,7 @@ class MainWindow(QMainWindow):
         print(dialog.selectedFiles())
         self.file_save(False)
         self.update_title()
+        return True
 
     def file_print(self):
         printer = QPrinter(QPrinter.HighResolution)
@@ -1817,12 +1985,10 @@ class MainWindow(QMainWindow):
         
         # 应用对应的主题样式
         if theme_name == 'Light':
-            # 浅色主题（当前已有的可爱风格）
-            self.applyCuteStyle()
-            # 更新场景背景为浅色
+            self.applyModernLightStyle()
             gradient = QLinearGradient(0, 0, 0, 1000)
-            gradient.setColorAt(0, QColor(255, 245, 250))  # 淡粉色
-            gradient.setColorAt(1, QColor(255, 240, 248))  # 更淡的粉色
+            gradient.setColorAt(0, QColor(247, 250, 255))
+            gradient.setColorAt(1, QColor(238, 245, 253))
             self.scene.setBackgroundBrush(QBrush(gradient))
         elif theme_name == 'Dark':
             # 深色主题
@@ -2130,6 +2296,30 @@ class MainWindow(QMainWindow):
         - 根据当前主题为所有对话框（QColorDialog、QInputDialog、QMessageBox等）设置样式
         - 使用QApplication.setStyleSheet()来全局应用样式
         """
+        if self.m_theme == 'Light':
+            self.dialog_style = """
+            QDialog, QMessageBox, QProgressDialog { background: #F8FAFD; color: #334155; }
+            QDialog QLabel, QMessageBox QLabel { color: #475569; }
+            QLabel#dialogTitle { color: #163A63; font-size: 17pt; font-weight: 700; }
+            QLineEdit, QTextEdit, QComboBox {
+                background: #FFFFFF; color: #24364B;
+                border: 1px solid #CBD8E8; border-radius: 8px;
+                padding: 7px; selection-background-color: #B9D8FF;
+            }
+            QLineEdit:focus, QTextEdit:focus, QComboBox:focus { border: 2px solid #4C9AFF; }
+            QPushButton {
+                background: #FFFFFF; color: #2864B5;
+                border: 1px solid #BFD5F2; border-radius: 8px;
+                padding: 7px 14px; min-width: 74px;
+            }
+            QPushButton:hover { background: #EAF3FF; border-color: #7CB2F5; }
+            QPushButton:default { background: #1976E9; color: #FFFFFF; border-color: #1976E9; }
+            QPushButton:default:hover { background: #0F68D6; }
+            QCheckBox { color: #52657B; spacing: 6px; }
+            QProgressBar { border: 1px solid #D4DEEA; border-radius: 6px; background: #FFFFFF; }
+            QProgressBar::chunk { background: #2496ED; border-radius: 5px; }
+            """
+            return
         if self.m_theme == 'Light':
             # 浅色主题对话框样式（可爱风格）
             dialog_style = """

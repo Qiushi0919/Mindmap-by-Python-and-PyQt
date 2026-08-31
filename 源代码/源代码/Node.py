@@ -240,7 +240,7 @@ class Node(QGraphicsTextItem):
             self.setMargin((5, 18))
             # 根据主题设置默认颜色（paint方法会根据主题绘制，这里只设置基础颜色）
             if self.m_theme == 'Light':
-                self._setColorInternal(QColor(Qt.red))
+                self._setColorInternal(QColor(37, 99, 235))
                 self.setTextColor(QColor(Qt.white))
             elif self.m_theme == 'Dark':
                 self._setColorInternal(QColor(70, 80, 120))
@@ -256,8 +256,8 @@ class Node(QGraphicsTextItem):
             self.setMargin((3, 18))
             # 根据主题设置默认颜色
             if self.m_theme == 'Light':
-                self._setColorInternal(QColor(Qt.gray))
-                self.setTextColor(QColor(Qt.black))
+                self._setColorInternal(QColor(219, 234, 254))
+                self.setTextColor(QColor(30, 58, 95))
             elif self.m_theme == 'Dark':
                 self._setColorInternal(QColor(60, 60, 70))
                 self.setTextColor(QColor(Qt.white))  # 深色主题保持白色
@@ -272,8 +272,8 @@ class Node(QGraphicsTextItem):
             self.setMargin((2, 18))
             # 根据主题设置默认颜色
             if self.m_theme == 'Light':
-                self._setColorInternal(QColor(Qt.white))
-                self.setTextColor(QColor(Qt.black))
+                self._setColorInternal(QColor(248, 250, 252))
+                self.setTextColor(QColor(51, 65, 85))
             elif self.m_theme == 'Dark':
                 self._setColorInternal(QColor(50, 50, 55))
                 self.setTextColor(QColor(Qt.white))  # 深色主题保持白色
@@ -285,8 +285,8 @@ class Node(QGraphicsTextItem):
         elif level == FreeThemeLevel:
             # 自由主题
             if self.m_theme == 'Light':
-                self._setColorInternal(QColor(Qt.black))
-                self.setTextColor(QColor(Qt.white))
+                self._setColorInternal(QColor(224, 242, 254))
+                self.setTextColor(QColor(12, 74, 110))
             elif self.m_theme == 'Dark':
                 self._setColorInternal(QColor(60, 70, 90))
                 self.setTextColor(QColor(Qt.white))
@@ -508,9 +508,9 @@ class Node(QGraphicsTextItem):
                 gradient.setColorAt(1, base_color)
                 border_color = base_color.darker(120)
                 # 选中状态的边框颜色（浅色主题）
-                selected_border_color = QColor(255, 107, 181)  # #FF6BB5
-                shadow_color1 = QColor(255, 182, 217, 100)
-                shadow_color2 = QColor(255, 158, 199, 100)
+                selected_border_color = QColor(14, 165, 233)
+                shadow_color1 = QColor(56, 189, 248, 70)
+                shadow_color2 = QColor(37, 99, 235, 55)
                 border_decor_color = QColor(255, 255, 255, 150)
             elif self.m_theme == 'Dark':
                 # 深色主题：使用更暗的渐变
@@ -548,28 +548,25 @@ class Node(QGraphicsTextItem):
                 border_decor_color = QColor(100, 100, 100, 150)
             border_width = 3 if self.m_level == MainThemeLevel else 2
         elif self.m_theme == 'Light':
-            # 浅色主题 - 二次元可爱风格
+            # Modern blue concept-map palette
             if self.m_level == MainThemeLevel:
-                # 中心主题 - 粉紫色渐变
                 gradient = QLinearGradient(rect.topLeft(), rect.bottomRight())
-                gradient.setColorAt(0, QColor(255, 182, 217))  # #FFB6D9
-                gradient.setColorAt(1, QColor(255, 158, 199))  # #FF9EC7
-                border_color = QColor(255, 140, 200)  # #FF8CC8
+                gradient.setColorAt(0, QColor(24, 194, 230))
+                gradient.setColorAt(1, QColor(37, 99, 235))
+                border_color = QColor(29, 78, 216)
                 border_width = 3
             elif self.m_level == SecondThemeLevel:
-                # 分支主题 - 浅粉色渐变
                 gradient = QLinearGradient(rect.topLeft(), rect.bottomRight())
-                gradient.setColorAt(0, QColor(255, 228, 240))  # #FFE4F0
-                gradient.setColorAt(1, QColor(255, 214, 232))  # #FFD6E8
-                border_color = QColor(255, 182, 217)  # #FFB6D9
+                gradient.setColorAt(0, QColor(239, 246, 255))
+                gradient.setColorAt(1, QColor(219, 234, 254))
+                border_color = QColor(147, 197, 253)
                 border_width = 2
             elif self.m_level == ThirdThemeLevel:
-                # 子主题 - 淡粉色渐变
                 gradient = QLinearGradient(rect.topLeft(), rect.bottomRight())
-                gradient.setColorAt(0, QColor(255, 245, 250))  # #FFF5FA
-                gradient.setColorAt(1, QColor(255, 240, 248))  # #FFF0F8
-                border_color = QColor(255, 214, 232)  # #FFD6E8
-                border_width = 2
+                gradient.setColorAt(0, QColor(255, 255, 255))
+                gradient.setColorAt(1, QColor(248, 250, 252))
+                border_color = QColor(203, 213, 225)
+                border_width = 1.5
             else:
                 # 自由主题或其他 - 使用自定义颜色或默认渐变
                 if self.m_color == QColor(Qt.black):
@@ -589,9 +586,9 @@ class Node(QGraphicsTextItem):
                     border_color = base_color.darker(120)
                 border_width = 2
             # 选中状态的边框颜色（浅色主题）
-            selected_border_color = QColor(255, 107, 181)  # #FF6BB5
-            shadow_color1 = QColor(255, 182, 217, 100)
-            shadow_color2 = QColor(255, 158, 199, 100)
+            selected_border_color = QColor(14, 165, 233)
+            shadow_color1 = QColor(56, 189, 248, 70)
+            shadow_color2 = QColor(37, 99, 235, 55)
             border_decor_color = QColor(255, 255, 255, 150)
         elif self.m_theme == 'Dark':
             # 深色主题
@@ -701,7 +698,7 @@ class Node(QGraphicsTextItem):
         # 绘制主背景（带渐变）
         painter.setBrush(QBrush(gradient))
         painter.setPen(QPen(QBrush(border_color), border_width, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
-        painter.drawRoundedRect(rect, 12.0, 6.0)  # 更大的圆角，更可爱
+        painter.drawRoundedRect(rect, 10.0, 10.0)
         
         # 如果节点有边框标记（激活状态），绘制额外的装饰
         if self.m_border:
@@ -730,8 +727,8 @@ class Node(QGraphicsTextItem):
             
             # 根据主题设置按钮颜色
             if self.m_theme == 'Light':
-                button_color = QColor(255, 182, 217)  # 粉色
-                button_border = QColor(255, 140, 200)
+                button_color = QColor(147, 197, 253)
+                button_border = QColor(59, 130, 246)
             elif self.m_theme == 'Dark':
                 button_color = QColor(100, 150, 200)  # 蓝色
                 button_border = QColor(80, 130, 180)
@@ -757,11 +754,10 @@ class Node(QGraphicsTextItem):
                 
                 # 根据主题设置颜色
                 if self.m_theme == 'Light':
-                    # 浅色主题 - 粉色渐变
                     handle_gradient = QRadialGradient(handle_rect.center(), hs/2)
-                    handle_gradient.setColorAt(0, QColor(255, 182, 217))
-                    handle_gradient.setColorAt(1, QColor(255, 140, 200))
-                    pen_color = QColor(255, 107, 181)
+                    handle_gradient.setColorAt(0, QColor(125, 211, 252))
+                    handle_gradient.setColorAt(1, QColor(37, 99, 235))
+                    pen_color = QColor(29, 78, 216)
                     center_color = QColor(255, 255, 255)
                 elif self.m_theme == 'Dark':
                     # 深色主题 - 亮蓝色渐变
@@ -1259,4 +1255,3 @@ class Node(QGraphicsTextItem):
         self._dragging = False
 
         super().mouseReleaseEvent(e)
-

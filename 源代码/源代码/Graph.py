@@ -67,6 +67,10 @@ class Graph(QGraphicsScene):
     def __init__(self, *args, **kwargs):
         super(Graph, self).__init__(*args, **kwargs)
 
+        # Provide a generous, stable workspace instead of relying on Qt's
+        # auto-growing scene rectangle. This makes navigation feel like a
+        # dedicated concept-map canvas from the first launch.
+        self.setSceneRect(-5000, -3500, 10000, 7000)
         self.center_x =  self.sceneRect().x() + self.sceneRect().width()/2
         self.center_y = self.sceneRect().y() + self.sceneRect().height()/2
         self.m_activateNode = None
@@ -102,6 +106,30 @@ class Graph(QGraphicsScene):
 
         self.addFirstNode()
 
+    def drawBackground(self, painter, rect):
+        """Draw a quiet dot grid to give the canvas visual structure."""
+        super(Graph, self).drawBackground(painter, rect)
+        if self.m_theme == 'Dark':
+            dot_color = QColor(85, 98, 125, 105)
+        elif self.m_theme == 'Black & White':
+            dot_color = QColor(165, 174, 190, 90)
+        else:
+            dot_color = QColor(174, 190, 214, 105)
+
+        grid = 40
+        left = int(math.floor(rect.left() / grid) * grid)
+        top = int(math.floor(rect.top() / grid) * grid)
+        points = []
+        x = left
+        while x < rect.right():
+            y = top
+            while y < rect.bottom():
+                points.append(QPointF(x, y))
+                y += grid
+            x += grid
+        painter.setPen(QPen(dot_color, 1.4))
+        painter.drawPoints(points)
+
     # ========================================================================
     # 节点工厂方法：生成 Node 并且将 Node 与 Slots 连接
     # ========================================================================
@@ -129,9 +157,9 @@ class Graph(QGraphicsScene):
         # 设置节点的主题（浅色/深色/黑白）
         node.setTheme(self.m_theme)
         
-        # 设置节点的初始大小为原来的280%（200% * 1.4）
-        # 这样节点在场景中显示得更大，更容易查看和操作
-        node.setScale(2.8)
+        # A restrained default scale keeps generated maps readable without
+        # turning the toolbar-sized labels into oversized cards.
+        node.setScale(1.45)
 
         # 连接节点的各种信号到场景的槽函数，实现节点与场景的交互
         node.nodeChanged.connect(self.nodeChanged)      # 节点变化时更新连接线
@@ -627,6 +655,35 @@ class Graph(QGraphicsScene):
             last_son_rect = last_son.sceneBoundingRect()
             return parent_node.sceneBoundingRect().right() + self.brachDistance, \
                    last_son_rect.bottom() + 50
+
+    def layoutTree(self, root_node):
+        """Lay out a hierarchy by leaf order to avoid generated-node overlap."""
+        if not root_node:
+            return
+
+        next_leaf_y = [self.center_y]
+        horizontal_gap = 310.0
+        vertical_gap = 105.0
+
+        def place(node, depth):
+            child_positions = [place(child, depth + 1) for child in node.sonNode]
+            if child_positions:
+                y_pos = sum(child_positions) / float(len(child_positions))
+            else:
+                y_pos = next_leaf_y[0]
+                next_leaf_y[0] += max(vertical_gap, node.sceneBoundingRect().height() + 44.0)
+            x_pos = self.center_x + depth * horizontal_gap
+            node.setPos(x_pos, y_pos)
+            node.x = x_pos
+            node.y = y_pos
+            return y_pos
+
+        root_y = place(root_node, 0)
+        shift_y = self.center_y - root_y
+        if shift_y:
+            for node in self.getSubTree(root_node):
+                node.setPos(node.x, node.y + shift_y)
+                node.y += shift_y
 
     # ========================================================================
     # 添加子节点
@@ -1691,6 +1748,13 @@ class Graph(QGraphicsScene):
         except Exception as e:
             print(f'Error reading markdown file: {e}')
             return False
+
+        return self.readContentFromMarkdownText(content)
+
+    def readContentFromMarkdownText(self, content):
+        """Build a mind map directly from Markdown heading text."""
+        if not isinstance(content, str) or not content.strip():
+            return False
         
         # 清空现有节点和连接线
         self.removeAllBranches()
@@ -1850,10 +1914,14 @@ class Graph(QGraphicsScene):
             return False
         
         # 调整节点布局
+        if self.NodeList:
+            self.layoutTree(self.NodeList[0])
         self.adjustBranch()
         
         # 更新节点数量
         self.nodeNumChange.emit(len(self.NodeList))
+        if self.NodeList:
+            self.setActivateNode(self.NodeList[0])
         self.contentChanged.emit()
         
         return True

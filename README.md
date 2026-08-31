@@ -2,11 +2,11 @@
 
 <div align="center">
 
-![Python](https://img.shields.io/badge/Python-3.6+-blue.svg)
+![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)
 ![PyQt5](https://img.shields.io/badge/PyQt5-5.15+-green.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-一个功能丰富、界面美观的思维导图编辑软件，支持树形思维导图的创建、编辑和管理。
+一个现代化的桌面概念图编辑器，支持本地编辑，也可选通过 OrcaRouter 调用多模型 AI 生成概念图。
 
 作者：谢秋实 朱拓源
 
@@ -16,7 +16,7 @@
 
 ## 📖 项目简介
 
-MindMap 是一个基于 Python 和 PyQt5 开发的思维导图编辑软件。它提供了完整的思维导图编辑功能，支持多层级主题、丰富的样式定制、手写批注、待办事项管理等特性。软件提供浅色、深色、黑白三种主题，支持中英文双语界面。
+MindMap 是一个基于 Python 和 PyQt5 开发的思维导图编辑软件。它提供多层级主题、曲线连接、手写批注、待办事项和文件导出等功能。AI 是可选能力：不填写 API Key 时，完整的本地编辑功能不受影响。
 
 <img width="2504" height="1560" alt="image" src="https://github.com/user-attachments/assets/8df409c3-5f18-49f6-8c71-b0e086bc43d7" />
 
@@ -30,7 +30,8 @@ MindMap 是一个基于 Python 和 PyQt5 开发的思维导图编辑软件。它
 
 ### 核心特点
 
-- 🎨 **美观的界面设计**：支持多种主题切换
+- ✨ **AI 生成概念图**：通过 OrcaRouter 自由选择免费或付费模型
+- 🎨 **现代概念图界面**：点阵画布、曲线分支、紧凑工具栏与多主题
 - 🌐 **多语言支持**：支持中文和英文界面
 - 🎯 **丰富的功能**：节点编辑、连接线管理、手写批注、待办事项等
 - 💾 **完善的文件管理**：支持保存、加载、导出多种格式
@@ -40,6 +41,12 @@ MindMap 是一个基于 Python 和 PyQt5 开发的思维导图编辑软件。它
 ---
 
 ## ✨ 功能特性
+
+### 0. AI 概念图
+
+- ✅ **OrcaRouter 可选 Provider**：不影响本地功能，支持 `orcarouter/free` 与其他模型 ID
+- ✅ **主题生成**：输入中心主题和额外要求，自动创建三层概念图
+- ✅ **隐私优先**：API Key 只在当前运行进程中保留，不写入项目或思维导图文件
 
 ### 1. 节点管理
 
@@ -107,7 +114,7 @@ MindMap 是一个基于 Python 和 PyQt5 开发的思维导图编辑软件。它
 ## 🛠 技术栈
 
 ### 开发语言
-- **Python 3.6+**
+- **Python 3.9+**
 
 ### GUI框架
 - **PyQt5 5.15+**
@@ -132,36 +139,43 @@ MindMap 是一个基于 Python 和 PyQt5 开发的思维导图编辑软件。它
 
 ### 环境要求
 
-- Python 3.6 或更高版本
+- Python 3.9 或更高版本
 - PyQt5 5.15 或更高版本
 
 ### 安装步骤
 
 1. **克隆或下载项目**
    ```bash
-   git clone <repository-url>
-   cd mindmap-master
+   git clone https://github.com/Qiushi0919/Mindmap-by-Python-and-PyQt.git
+   cd Mindmap-by-Python-and-PyQt/源代码/源代码
    ```
 
 2. **安装依赖**
    ```bash
-   pip install PyQt5
-   ```
-
-   或者使用requirements.txt（如果存在）：
-   ```bash
-   pip install -r requirements.txt
+   python -m pip install -r requirements.txt
    ```
 
 ### 运行程序
 
-在项目根目录下执行：
+在 `源代码/源代码` 目录下执行：
 
 ```bash
 python main.py
 ```
 
 程序启动后，将显示主窗口界面。
+
+### 使用 OrcaRouter AI
+
+1. 在 [OrcaRouter](https://www.orcarouter.ai/) 创建 API Key。
+2. 在应用中选择 **AI → AI 生成概念图**，或按 `Ctrl+Shift+G`。
+3. 填入 Key、模型 ID 和中心主题，然后点击“Generate”。
+
+默认模型是 `orcarouter/free`。免费容量可能限流，以 [OrcaRouter 模型目录](https://docs.orcarouter.ai/getting-started/models) 为准。也可通过环境变量 `ORCAROUTER_API_KEY` 预填 Key。
+
+### 下载 EXE / DMG
+
+已配置 GitHub Actions 跨平台构建。推送 `v*` 版本标签后，GitHub Releases 会自动附带 Windows x64 EXE、macOS Apple Silicon DMG 和 macOS Intel DMG。
 
 ---
 
@@ -260,39 +274,29 @@ python main.py
 | 添加同级节点 | `Ctrl+Insert` |
 | 切换激活节点 | `↑` `↓` `←` `→` |
 | 退出编辑 | `Esc` |
+| AI 生成概念图 | `Ctrl+Shift+G` |
 
 ---
 
 ## 📁 项目结构
 
 ```
-mindmap-master/
-├── main.py                 # 程序入口文件
-├── mainwindow.py           # 主窗口实现
-├── Graph.py                # 场景管理类（节点和连接线管理）
-├── Node.py                  # 节点类实现
-├── Branch.py                # 连接线类实现
-├── Command.py               # 命令模式实现（撤销/重做）
-├── Component.py             # 组件模块（备注、链接、待办事项等）
-├── Annotation.py            # 批注和手写功能
-├── Config.py                # 配置常量定义
-├── README.md                # 项目说明文档
-├── test.ini                 # 配置文件
-│
-├── files/                   # 示例文件目录
-│   ├── *.mm                # 思维导图文件
-│   ├── *.png               # 导出的图片
-│   └── *.pdf               # 导出的PDF
-│
-├── icons/                   # 图标资源目录
-│   └── *.svg               # SVG图标文件
-│
-├── images/                  # 图片资源目录
-│   ├── window.ico          # 窗口图标
-│   └── *.png               # 工具栏图标
-│
-└── test/                    # 测试代码目录
-    └── *.py                # 测试脚本
+Mindmap-by-Python-and-PyQt/
+├── 源代码/源代码/
+│   ├── main.py             # 程序入口
+│   ├── mainwindow.py       # 主窗口与 AI 交互
+│   ├── AIProvider.py       # OrcaRouter API 客户端与输出校验
+│   ├── AIDialog.py         # AI 生成窗口与异步任务
+│   ├── Graph.py            # 画布、导入与布局
+│   ├── Node.py             # 节点绘制与交互
+│   ├── Branch.py           # 曲线分支
+│   ├── icons/              # SVG 界面图标
+│   ├── images/             # 应用与工具栏图片
+│   └── files/              # 示例导图
+├── tests/                   # 自动化测试
+├── scripts/                 # 本地打包和图标生成脚本
+├── MindMap.spec             # PyInstaller 打包配置
+└── .github/workflows/       # EXE / DMG 构建与 Release
 ```
 
 ### 核心模块说明
@@ -301,7 +305,8 @@ mindmap-master/
 - **mainwindow.py**：主窗口类，包含菜单栏、工具栏、状态栏，管理文件操作和界面设置
 - **Graph.py**：场景管理类，继承自QGraphicsScene，管理所有节点和连接线
 - **Node.py**：节点类，继承自QGraphicsTextItem，实现节点的绘制、编辑、移动等功能
-- **Branch.py**：连接线类，继承自QGraphicsLineItem，实现节点之间的连线
+- **Branch.py**：连接线类，继承自 QGraphicsPathItem，实现节点之间的曲线
+- **AIProvider.py**：不引入额外 SDK 的 OrcaRouter OpenAI-compatible 客户端
 - **Command.py**：命令模式实现，支持撤销/重做功能
 - **Component.py**：组件模块，包含备注窗口、链接窗口、待办事项等
 - **Annotation.py**：批注和手写功能实现
@@ -337,7 +342,7 @@ mindmap-master/
 #### 调试技巧
 
 - 使用 `print()` 输出调试信息
-- 检查 `test.ini` 配置文件
+- 检查系统应用配置目录中的 `settings.ini`
 - 查看控制台输出的错误信息
 
 ---
@@ -346,6 +351,9 @@ mindmap-master/
 
 ### 最新版本特性
 
+- ✅ 可选 OrcaRouter Provider 与 AI 概念图生成
+- ✅ 现代点阵画布、蓝色节点系统与曲线分支
+- ✅ Windows EXE / macOS DMG 自动构建与 GitHub Release
 - ✅ 支持三种主题：浅色、深色、黑白
 - ✅ 支持中英文双语界面
 - ✅ 支持手写批注功能
@@ -378,6 +386,12 @@ mindmap-master/
 3. 提交更改 (`git commit -m '  some AmazingFeature'`)
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
 5. 开启 Pull Request
+
+### 分支与发布策略
+
+- 新功能使用短期 `feature/*` 分支，通过 Pull Request 合并回 `main`。
+- Windows 和 macOS 共用同一份源码，不设平台专用长期分支。
+- 可下载安装包放入 GitHub Releases，不提交到 `main` 或单独的二进制分支。
 
 ---
 
