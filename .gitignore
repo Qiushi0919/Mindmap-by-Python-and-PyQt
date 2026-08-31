@@ -1,0 +1,9 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+build/
+dist/
+artifacts/
+build-assets/
+*.spec.bak
